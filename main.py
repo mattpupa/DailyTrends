@@ -13,6 +13,11 @@ def get_new_terms(request):
     # https://googleapis.dev/python/bigquery/latest/generated/google.cloud.bigquery.client.Client.html#google.cloud.bigquery.client.Client.from_service_account_json
     bq_client = bigquery.Client()
 
+    """
+    1. Subquery is used to find the latest available week in the table
+    2. Query finds the top terms of the week, as of yesterday in Los Angelas that are in the top 10 (by rank)
+    3. Query is joined on subquery to make sure data is only pulling from latest available week
+    """
     query_latest =  f"""
         select
             distinct term
@@ -29,10 +34,10 @@ def get_new_terms(request):
             and rank <= 10
     """
 
-    query_job_latest = bq_client.query(query_latest) # Make the API request
+    query_job_latest = bq_client.query(query_latest) # Connect the SQL query to bigquery
 
     # https://cloud.google.com/bigquery/docs/quickstarts/quickstart-client-libraries
-    results_latest = query_job_latest.result().to_dataframe()
+    results_latest = query_job_latest.result().to_dataframe() # save results to a dataframe
 
     query_previous =  f"""
         select
@@ -50,28 +55,30 @@ def get_new_terms(request):
             and rank <= 10
     """
 
-    query_job_previous = bq_client.query(query_previous) # Make the API request
+    query_job_previous = bq_client.query(query_previous) # Connect the SQL query to bigquery
 
     # https://cloud.google.com/bigquery/docs/quickstarts/quickstart-client-libraries
-    results_previous = query_job_previous.result().to_dataframe()
+    results_previous = query_job_previous.result().to_dataframe() # save results to a dataframe
 
-
+    # Both dataframes are combined and duplicates are removed
     df_new_terms = results_latest.merge(results_previous.drop_duplicates(), on=['term'],
                        how='left', indicator=True)
+    df_new_terms = df_new_terms.loc[df_new_terms['_merge'] == 'left_only']
+    df_new_terms.drop(['_merge'], axis=1)
 
+    # New top terms are saved as a list of lists, which is needed to write to google sheets
     new_terms = list(df_new_terms['term'])
-
     new_terms_list_of_lists = list(map(lambda t:[t], new_terms))
+
 
 
     #### Delete Current Data in Google Sheets via service account ####
     # https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/batchClear
-
     credentials, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/spreadsheets"])
     service = build('sheets', 'v4', credentials=credentials)
 
     # The ID and range of a sample spreadsheet.
-    SPREADSHEET_ID = 'thisisthespreadsheetID'
+    SPREADSHEET_ID = '1FvMRGaZ7Xk0M2HlICE3lrEzwBbpHHMdsXQYjqd21SWQ'
     RANGE = 'Terms!A2:A'
 
     # Call the Sheets API
