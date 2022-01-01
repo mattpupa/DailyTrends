@@ -11,6 +11,7 @@ import google.auth
 
 def get_new_terms(request):
     # https://googleapis.dev/python/bigquery/latest/generated/google.cloud.bigquery.client.Client.html#google.cloud.bigquery.client.Client.from_service_account_json
+    # https://googleapis.dev/python/bigquery/latest/usage/client.html
     bq_client = bigquery.Client()
 
     """
