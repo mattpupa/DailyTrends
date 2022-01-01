@@ -18,7 +18,7 @@ def get_new_terms(request):
     2. Query finds the top terms of the week, as of yesterday in Los Angelas that are in the top 10 (by rank)
     3. Query is joined on subquery to make sure data is only pulling from latest available week
     """
-    query_latest =  f"""
+    query_latest =  """
         select
             distinct term
         from (
@@ -39,7 +39,7 @@ def get_new_terms(request):
     # https://cloud.google.com/bigquery/docs/quickstarts/quickstart-client-libraries
     results_latest = query_job_latest.result().to_dataframe() # save results to a dataframe
 
-    query_previous =  f"""
+    query_previous =  """
         select
             distinct term
         from (
