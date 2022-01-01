@@ -75,6 +75,7 @@ def get_new_terms(request):
 
 
     #### Delete Current Data in Google Sheets via service account ####
+    # https://www.geeksforgeeks.org/underscore-_-python/
     # https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/batchClear
     credentials, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/spreadsheets"])
     service = build('sheets', 'v4', credentials=credentials)
